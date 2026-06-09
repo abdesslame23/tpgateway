@@ -20,7 +20,6 @@ async function connectDB() {
   console.log('Connecté à MongoDB - bibliotheque_emprunts')
 }
 
-// Fonction pour auto-incrementer l'id
 async function getNextId() {
   const emprunts = db.collection('emprunts')
   const dernier = await emprunts.find().sort({ id: -1 }).limit(1).toArray()
@@ -28,7 +27,6 @@ async function getNextId() {
   return dernier[0].id + 1
 }
 
-// GET /emprunts - tous les emprunts
 app.get('/emprunts', async (req, res) => {
   try {
     const emprunts = await db.collection('emprunts').find().toArray()
@@ -38,8 +36,6 @@ app.get('/emprunts', async (req, res) => {
   }
 })
 
-// GET /emprunts/en-cours - emprunts non retournés
-// IMPORTANT : cette route doit être AVANT /emprunts/:id
 app.get('/emprunts/en-cours', async (req, res) => {
   try {
     const emprunts = await db.collection('emprunts').find({ retourne: false }).toArray()
@@ -49,7 +45,6 @@ app.get('/emprunts/en-cours', async (req, res) => {
   }
 })
 
-// GET /emprunts/membre/:idMembre - emprunts d'un membre
 app.get('/emprunts/membre/:idMembre', async (req, res) => {
   try {
     const idMembre = parseInt(req.params.idMembre)
@@ -60,12 +55,10 @@ app.get('/emprunts/membre/:idMembre', async (req, res) => {
   }
 })
 
-// POST /emprunts - créer un emprunt
 app.post('/emprunts', async (req, res) => {
   try {
     const { idMembre, idLivre } = req.body
 
-    // Étape 1 : vérifier que le membre existe et est actif
     let membre
     try {
       const resMembre = await axios.get(`${MEMBRE_SERVICE}/membres/${idMembre}`)
@@ -81,7 +74,6 @@ app.post('/emprunts', async (req, res) => {
       return res.status(400).json({ message: 'Membre inactif' })
     }
 
-    // Étape 2 : vérifier que le livre existe et est disponible
     let livre
     try {
       const resLivre = await axios.get(`${LIVRE_SERVICE}/livres/${idLivre}`)
@@ -97,7 +89,6 @@ app.post('/emprunts', async (req, res) => {
       return res.status(400).json({ message: 'Livre non disponible' })
     }
 
-    // Étape 3 : créer l'emprunt
     const id = await getNextId()
     const nouvelEmprunt = {
       id: id,
@@ -111,38 +102,31 @@ app.post('/emprunts', async (req, res) => {
     }
     await db.collection('emprunts').insertOne(nouvelEmprunt)
 
-    // Étape 4 : mettre le livre comme non disponible
     await axios.patch(`${LIVRE_SERVICE}/livres/${idLivre}/disponibilite`, { disponible: false })
 
-    // Étape 5 : retourner l'emprunt créé
     res.status(201).json(nouvelEmprunt)
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
 })
 
-// PATCH /emprunts/:id/retour - retourner un livre
 app.patch('/emprunts/:id/retour', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
 
-    // Étape 6 : retrouver l'emprunt
     const emprunt = await db.collection('emprunts').findOne({ id: id })
     if (!emprunt) return res.status(404).json({ message: 'Emprunt non trouvé' })
 
-    // Étape 7 : vérifier que le livre n'a pas déjà été retourné
     if (emprunt.retourne === true) {
       return res.status(400).json({ message: 'Ce livre a déjà été retourné' })
     }
 
-    // Étape 8 : mettre à jour l'emprunt
     const result = await db.collection('emprunts').findOneAndUpdate(
       { id: id },
       { $set: { retourne: true, dateRetour: new Date().toISOString() } },
       { returnDocument: 'after' }
     )
 
-    // Étape 9 : remettre le livre disponible
     await axios.patch(`${LIVRE_SERVICE}/livres/${emprunt.idLivre}/disponibilite`, { disponible: true })
 
     res.status(200).json(result)
@@ -151,7 +135,6 @@ app.patch('/emprunts/:id/retour', async (req, res) => {
   }
 })
 
-// DELETE /emprunts/:id - supprimer un emprunt
 app.delete('/emprunts/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)

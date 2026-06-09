@@ -8,8 +8,6 @@ const LIVRE_SERVICE = process.env.LIVRE_SERVICE || 'http://localhost:3001'
 const MEMBRE_SERVICE = process.env.MEMBRE_SERVICE || 'http://localhost:3002'
 const EMPRUNT_SERVICE = process.env.EMPRUNT_SERVICE || 'http://localhost:3003'
 
-// ==================== ROUTES LIVRES ====================
-
 app.get('/livres', async (req, res) => {
   try {
     const r = await axios.get(`${LIVRE_SERVICE}/livres`)
@@ -67,8 +65,6 @@ app.delete('/livres/:id', async (req, res) => {
   }
 })
 
-// ==================== ROUTES MEMBRES ====================
-
 app.get('/membres', async (req, res) => {
   try {
     const r = await axios.get(`${MEMBRE_SERVICE}/membres`)
@@ -117,8 +113,6 @@ app.delete('/membres/:id', async (req, res) => {
   }
 })
 
-// ==================== ROUTES EMPRUNTS ====================
-
 app.get('/emprunts', async (req, res) => {
   try {
     const r = await axios.get(`${EMPRUNT_SERVICE}/emprunts`)
@@ -151,7 +145,6 @@ app.post('/emprunts', async (req, res) => {
     const r = await axios.post(`${EMPRUNT_SERVICE}/emprunts`, req.body)
     res.status(201).json(r.data)
   } catch (err) {
-    // Bug fix : le code du TP avait une erreur ici (if (err.response) return res... sans le return)
     if (err.response) return res.status(err.response.status).json(err.response.data)
     res.status(500).json({ message: err.message })
   }
@@ -162,7 +155,6 @@ app.patch('/emprunts/:id/retour', async (req, res) => {
     const r = await axios.patch(`${EMPRUNT_SERVICE}/emprunts/${req.params.id}/retour`)
     res.status(200).json(r.data)
   } catch (err) {
-    // Bug fix : même correction que pour POST /emprunts
     if (err.response) return res.status(err.response.status).json(err.response.data)
     res.status(500).json({ message: err.message })
   }

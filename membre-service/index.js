@@ -16,7 +16,6 @@ async function connectDB() {
   console.log('Connecté à MongoDB - bibliotheque_membres')
 }
 
-// Fonction pour auto-incrementer l'id
 async function getNextId() {
   const membres = db.collection('membres')
   const dernier = await membres.find().sort({ id: -1 }).limit(1).toArray()
@@ -24,7 +23,6 @@ async function getNextId() {
   return dernier[0].id + 1
 }
 
-// GET /membres - tous les membres
 app.get('/membres', async (req, res) => {
   try {
     const membres = await db.collection('membres').find().toArray()
@@ -34,7 +32,6 @@ app.get('/membres', async (req, res) => {
   }
 })
 
-// GET /membres/:id - un membre par id
 app.get('/membres/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -46,12 +43,9 @@ app.get('/membres/:id', async (req, res) => {
   }
 })
 
-// POST /membres - ajouter un membre
 app.post('/membres', async (req, res) => {
   try {
     const { nom, email } = req.body
-
-    // Vérifier si l'email existe déjà
     const emailExistant = await db.collection('membres').findOne({ email: email })
     if (emailExistant) return res.status(400).json({ message: 'Email déjà utilisé' })
 
@@ -69,7 +63,6 @@ app.post('/membres', async (req, res) => {
   }
 })
 
-// PUT /membres/:id - remplacer complètement un membre
 app.put('/membres/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -86,7 +79,6 @@ app.put('/membres/:id', async (req, res) => {
   }
 })
 
-// PATCH /membres/:id/statut - mettre à jour uniquement actif
 app.patch('/membres/:id/statut', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -103,7 +95,6 @@ app.patch('/membres/:id/statut', async (req, res) => {
   }
 })
 
-// DELETE /membres/:id - supprimer un membre
 app.delete('/membres/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)

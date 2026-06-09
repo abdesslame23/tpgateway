@@ -16,7 +16,6 @@ async function connectDB() {
   console.log('Connecté à MongoDB - bibliotheque_livres')
 }
 
-// Fonction pour auto-incrementer l'id
 async function getNextId() {
   const livres = db.collection('livres')
   const dernier = await livres.find().sort({ id: -1 }).limit(1).toArray()
@@ -24,7 +23,6 @@ async function getNextId() {
   return dernier[0].id + 1
 }
 
-// GET /livres - tous les livres
 app.get('/livres', async (req, res) => {
   try {
     const livres = await db.collection('livres').find().toArray()
@@ -34,8 +32,6 @@ app.get('/livres', async (req, res) => {
   }
 })
 
-// GET /livres/disponibles - livres disponibles
-// IMPORTANT : cette route doit être AVANT /livres/:id sinon "disponibles" sera capturé comme un id
 app.get('/livres/disponibles', async (req, res) => {
   try {
     const livres = await db.collection('livres').find({ disponible: true }).toArray()
@@ -45,7 +41,6 @@ app.get('/livres/disponibles', async (req, res) => {
   }
 })
 
-// GET /livres/:id - un livre par id
 app.get('/livres/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -57,7 +52,6 @@ app.get('/livres/:id', async (req, res) => {
   }
 })
 
-// POST /livres - ajouter un livre
 app.post('/livres', async (req, res) => {
   try {
     const { titre, auteur, isbn } = req.body
@@ -76,7 +70,6 @@ app.post('/livres', async (req, res) => {
   }
 })
 
-// PUT /livres/:id - remplacer complètement un livre
 app.put('/livres/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -93,7 +86,6 @@ app.put('/livres/:id', async (req, res) => {
   }
 })
 
-// PATCH /livres/:id/disponibilite - mettre à jour uniquement disponible
 app.patch('/livres/:id/disponibilite', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
@@ -110,7 +102,6 @@ app.patch('/livres/:id/disponibilite', async (req, res) => {
   }
 })
 
-// DELETE /livres/:id - supprimer un livre
 app.delete('/livres/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
