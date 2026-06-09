@@ -1,0 +1,75 @@
+version: '3'
+
+networks:
+  bibliotheque-network:
+    driver: bridge
+
+services:
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - bibliotheque-network
+
+  livre-service:
+    build: ./livre-service
+    container_name: livre-service
+    ports:
+      - "3001:3001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+    depends_on:
+      - mongodb
+    restart: always
+    networks:
+      - bibliotheque-network
+
+  membre-service:
+    build: ./membre-service
+    container_name: membre-service
+    ports:
+      - "3002:3002"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+    depends_on:
+      - mongodb
+    restart: always
+    networks:
+      - bibliotheque-network
+
+  emprunt-service:
+    build: ./emprunt-service
+    container_name: emprunt-service
+    ports:
+      - "3003:3003"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - LIVRE_SERVICE=http://livre-service:3001
+      - MEMBRE_SERVICE=http://membre-service:3002
+    depends_on:
+      - mongodb
+      - livre-service
+      - membre-service
+    restart: always
+    networks:
+      - bibliotheque-network
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - LIVRE_SERVICE=http://livre-service:3001
+      - MEMBRE_SERVICE=http://membre-service:3002
+      - EMPRUNT_SERVICE=http://emprunt-service:3003
+    depends_on:
+      - livre-service
+      - membre-service
+      - emprunt-service
+    restart: always
+    networks:
+      - bibliotheque-network
